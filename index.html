@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ágora · Dilemas educativos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: cercana y seria a la vez, un aula donde se discute con respeto
+   IDEA: un atril de debate escolar: la tarjeta del dilema arriba, las intervenciones debajo
+   PICTURE: el propio debate (tarjeta del dilema + chat) es la pieza central
+   COLOUR and TYPE: blanco, tinta casi negra, verde azulado profundo como campo, coral como acento; Archivo + Inter
+   LAYOUT: barra superior con Alumno/Docente; una columna de trabajo; panel docente en formulario de una columna */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#0f1416);--ink:light-dark(#16181d,#eef2f2);--mute:light-dark(#5b6670,#9aa7ad);
+--field:light-dark(#0f5c63,#0d3f44);--fieldInk:#f2fbfb;--acc:light-dark(#e8453c,#ff6b5f);
+--card:light-dark(#f3f6f6,#172024);--line:light-dark(#dbe3e4,#26343a);--me:light-dark(#0f5c63,#1b6c74)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Archivo,Inter,sans-serif;line-height:1.08;text-wrap:balance;margin:0}
+.band{padding:clamp(20px,3.5vw,48px) max(5vw,16px)}
+.wrap{max-width:980px;margin:0 auto}
+header{background:var(--field);color:var(--fieldInk)}
+header .wrap{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.brand{display:flex;gap:12px;align-items:center}
+.brand h1{font-size:clamp(24px,3.4vw,34px);font-weight:800}
+.brand small{display:block;opacity:.8;font-size:14px}
+nav{display:flex;gap:6px;background:rgba(255,255,255,.12);padding:4px;border-radius:12px}
+nav button{background:none;border:0;color:inherit;font:600 15px Inter;padding:10px 16px;border-radius:9px;min-height:44px;cursor:pointer}
+nav button[aria-pressed=true]{background:#fff;color:#0f5c63}
+button,.btn{font:600 15px Inter;border-radius:10px;min-height:44px;padding:10px 18px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+button:disabled{opacity:.5;cursor:default}
+input,textarea,select{font:16px Inter;width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+textarea{resize:vertical}
+label{font-weight:600;font-size:15px;display:block;margin:18px 0 6px}
+.hint{color:var(--mute);font-size:14px;margin:4px 0 0}
+.hidden{display:none!important}
+/* elegir dilema */
+.intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:end;margin-bottom:22px}
+.intro h2{font-size:clamp(30px,4.6vw,46px)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.dcard{text-align:left;background:var(--card);border:2px solid transparent;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:8px;min-height:170px}
+.dcard:hover{border-color:var(--field)}
+.dcard .tag{font-size:13px;color:var(--acc);font-weight:600}
+.dcard h3{font-size:20px}
+.dcard p{margin:0;color:var(--mute);font-size:15px;font-weight:400}
+/* debate */
+.lectern{background:var(--field);color:var(--fieldInk);border-radius:20px;padding:clamp(18px,3vw,30px);position:relative;overflow:hidden}
+.lectern::after{content:"";position:absolute;right:-60px;bottom:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.07)}
+.lectern .tag{font-size:13px;font-weight:600;opacity:.85}
+.lectern h2{font-size:clamp(24px,3.6vw,36px);margin:6px 0 10px}
+.lectern p{margin:0;max-width:68ch;opacity:.92}
+.stance{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;position:relative;z-index:1}
+.stance button{background:rgba(255,255,255,.14);border-color:transparent;color:#fff}
+.stance button[aria-pressed=true]{background:#fff;color:#0f5c63}
+.meta{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin:16px 0 8px;color:var(--mute);font-size:14px}
+.chat{display:flex;flex-direction:column;gap:12px;padding:8px 0 18px;min-height:220px}
+.msg{max-width:78%;padding:12px 16px;border-radius:16px;white-space:pre-wrap;animation:in .25s ease}
+.msg.ai{background:var(--card);border-top-left-radius:4px;align-self:flex-start}
+.msg.me{background:var(--me);color:#fff;border-top-right-radius:4px;align-self:flex-end}
+.msg .who{display:block;font-size:13px;font-weight:600;opacity:.75;margin-bottom:2px}
+.msg.sys{align-self:center;background:none;color:var(--mute);font-size:14px;text-align:center;max-width:90%}
+@keyframes in{from{opacity:0;transform:translateY(6px)}}
+@media(prefers-reduced-motion:reduce){.msg{animation:none}}
+.composer{position:sticky;bottom:0;background:var(--bg);padding:10px 0 14px;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
+.composer textarea{min-height:52px;max-height:180px}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.summary{background:var(--card);border-left:4px solid var(--acc);border-radius:12px;padding:18px;margin-top:12px;white-space:pre-wrap}
+/* docente */
+.panel{max-width:760px}
+.dl{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.ditem{background:var(--card);border-radius:12px;padding:14px;display:grid;gap:8px}
+.ditem .row{justify-content:flex-end}
+.note{background:var(--card);border-radius:12px;padding:14px 16px;font-size:15px;margin-top:22px}
+.note code{background:var(--bg);padding:1px 5px;border-radius:5px;font-size:14px}
+.status{font-size:14px;color:var(--mute)}
+.pill{display:inline-block;font-size:13px;padding:3px 10px;border-radius:99px;background:var(--card);color:var(--mute)}
+@media(max-width:600px){.intro{grid-template-columns:1fr}.msg{max-width:92%}nav button{padding:10px 12px}}
+</style>
+</head>
+<body>
+<header class="band" style="padding-block:18px">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="42" height="42" viewBox="0 0 42 42" aria-hidden="true"><rect x="3" y="8" width="24" height="18" rx="6" fill="#fff"/><path d="M9 26l-3 6 8-6" fill="#fff"/><rect x="15" y="16" width="24" height="18" rx="6" fill="#e8453c"/><path d="M33 34l3 6-8-6" fill="#e8453c"/></svg>
+      <div><h1>Ágora</h1><small>Debate dilemas educativos con la IA</small></div>
+    </div>
+    <nav aria-label="Modo">
+      <button id="tabAlumno" aria-pressed="true">Alumno</button>
+      <button id="tabDocente" aria-pressed="false">Docente</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ALUMNO: elegir -->
+  <section id="vElegir" class="band"><div class="wrap">
+    <div class="intro">
+      <h2>Elige un dilema y defiende tu postura</h2>
+      <div>
+        <label for="nombre" style="margin-top:0">Tu nombre o alias</label>
+        <input id="nombre" placeholder="Ej.: Lucía" autocomplete="nickname">
+      </div>
+    </div>
+    <div id="grid" class="grid"></div>
+    <p class="hint" style="margin-top:14px">Dilemas de ejemplo: el docente puede cambiarlos en la pestaña Docente.</p>
+  </div></section>
+
+  <!-- ALUMNO: debate -->
+  <section id="vDebate" class="band hidden"><div class="wrap">
+    <div class="lectern">
+      <span class="tag" id="dTag"></span>
+      <h2 id="dTitulo"></h2>
+      <p id="dTexto"></p>
+      <div class="stance" role="group" aria-label="Tu postura">
+        <button data-p="A favor">A favor</button>
+        <button data-p="En contra">En contra</button>
+        <button data-p="Aún no lo sé">Aún no lo sé</button>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="row" style="gap:6px"><span id="turnos" class="pill">Turno 0</span><span id="autoresPill" class="pill"></span></span>
+      <span class="row">
+        <button id="btnResumen">Terminar y ver valoración</button>
+        <button id="btnVolver">Cambiar de dilema</button>
+      </span>
+    </div>
+    <div id="chat" class="chat" aria-live="polite"></div>
+    <div id="resumen"></div>
+    <div id="cierre" class="row hidden" style="margin-top:14px">
+      <button class="primary" id="btnPdf">Descargar PDF del debate</button>
+      <button id="btnCopiar">Copiar conversación</button>
+      <span id="pdfEstado" class="status" style="align-self:center"></span>
+    </div>
+    <form id="composer" class="composer">
+      <textarea id="txt" rows="2" placeholder="Escribe tu argumento…"></textarea>
+      <button class="primary" id="btnEnviar">Enviar</button>
+    </form>
+  </div></section>
+
+  <!-- DOCENTE -->
+  <section id="vDocente" class="band hidden"><div class="wrap panel">
+    <h2 style="font-size:clamp(28px,4vw,40px)">Cómo se comporta la IA</h2>
+    <p class="hint">Aquí iremos ajustando los prompts. Los cambios se guardan en este navegador.</p>
+
+    <label for="nivel" style="margin-top:22px">Nivel del alumnado</label>
+    <select id="nivel">
+      <option>ESO</option><option>Bachillerato</option><option selected>Grado universitario (Educación)</option><option>Máster de profesorado</option>
+    </select>
+
+    <label for="maxTurnos">Número de turnos del debate</label>
+    <input id="maxTurnos" type="number" min="2" max="20" value="6">
+    <p class="hint">Al llegar a este número, la IA cierra el debate y se genera la valoración.</p>
+
+    <label for="minAutores">Autores mínimos que debe citar el alumno</label>
+    <input id="minAutores" type="number" min="0" max="10" value="3">
+
+    <label for="listaAutores">Autores que la web reconoce</label>
+    <textarea id="listaAutores" rows="3"></textarea>
+    <p class="hint">Separados por comas. Sirve para contar los autores que cita el alumno.</p>
+
+    <label for="prompt">Prompt de sistema</label>
+    <textarea id="prompt" rows="12"></textarea>
+    <p class="hint">Variables disponibles: {dilema}, {descripcion}, {postura}, {nivel}, {nombre}, {turno}, {maxTurnos}, {minAutores}, {autores}.</p>
+
+    <label for="promptEval">Prompt de valoración final</label>
+    <textarea id="promptEval" rows="6"></textarea>
+
+    <div class="row" style="margin-top:14px">
+      <button class="primary" id="btnGuardar">Guardar</button>
+      <button id="btnReset">Restaurar valores por defecto</button>
+      <span id="guardado" class="status" style="align-self:center"></span>
+    </div>
+
+    <h3 style="font-size:24px;margin-top:36px">Dilemas</h3>
+    <div id="dl" class="dl"></div>
+    <div class="row" style="margin-top:10px"><button id="btnAdd">Añadir dilema</button></div>
+
+    <div class="note">
+      <strong>Sobre la IA que responde.</strong> La web envía cada mensaje a un pequeño servidor intermedio (Cloudflare Worker) que guarda la clave de OpenAI y llama a ChatGPT. Su dirección se indica en <code>config.js</code>. Mientras no esté configurada, la web funciona en modo demostración.
+      <p class="hint" id="motor"></p>
+    </div>
+  </div></section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="config.js"></script>
+<script>
+{
+const DEF_PROMPT=`🎯 Objetivo:
+Hazle a {nombre} preguntas que le ayuden a reflexionar sobre el dilema y contradice su posición inicial con argumentos éticos, educativos o emocionales. Pon a prueba sus ideas y ayúdale a explorar otras perspectivas posibles.
+
+👩‍🏫 Rol:
+Actúa como una docente universitaria experta en educación y desarrollo moral, con conocimiento de los dilemas reales que enfrentan los docentes en su práctica profesional.
+
+🏫 Contexto:
+El dilema se enmarca en casos reales vividos por docentes en centros educativos españoles, donde entran en juego valores, derechos, emociones y responsabilidades profesionales. Hablas con alumnado de {nivel}.
+Dilema: "{dilema}". {descripcion}
+Posición inicial del alumno: {postura}. Si todavía no tiene posición, pídele primero que elija una y la justifique.
+
+🧭 Marco teórico (úsalo para guiar, no para dar clase):
+- Piaget: moral heterónoma (obedecer normas y autoridad, juzgar por las consecuencias) frente a moral autónoma (normas acordadas, intención, reciprocidad).
+- Kohlberg: nivel preconvencional (evitar castigo, interés propio), convencional (aprobación de los demás, cumplir la ley y el reglamento) y postconvencional (contrato social, derechos, principios éticos universales).
+- Gilligan: ética del cuidado: de la preocupación por uno mismo, al cuidado de los demás aunque suponga sacrificarse, y al equilibrio entre cuidarse y cuidar a otros. Contrástala con la ética de la justicia.
+En cada respuesta del alumno, detecta en silencio desde qué etapa razona y formula tu pregunta para llevarle un paso más allá (por ejemplo, de "porque lo dice el reglamento" a "¿qué derechos están en juego?", o de la justicia a "¿quién sale dañado y quién le cuida?"). No le pongas etiquetas al alumno ni le digas en qué etapa está.
+
+📚 Autores:
+El alumno debe fundamentar sus argumentos citando al menos {minAutores} autores (Piaget, Kohlberg, Gilligan u otros del ámbito educativo o ético). Autores que ya ha citado: {autores}.
+Mientras no llegue al mínimo, pídele en tus preguntas que apoye su idea en un autor ("¿Qué diría Kohlberg de esa razón?", "¿En qué autor te apoyas?"). No le des tú las citas hechas.
+
+⏱️ Duración:
+El debate dura {maxTurnos} turnos y vas por el turno {turno}. En el último turno no hagas pregunta: cierra con una sola frase que recoja la idea más valiosa del alumno.
+
+💬 Formato (obligatorio):
+- Intervenciones muy cortas: máximo 2 o 3 frases y unas 60 palabras.
+- Estructura fija: 1) una frase que rebata o matice su argumento con una razón ética, educativa o emocional; 2) UNA sola pregunta abierta y concreta.
+- Nunca hagas varias preguntas a la vez ni listas.
+- No des una respuesta definitiva: el juicio lo construye el alumno.
+- Si responde con una sola palabra o se va del tema, reconduce con una pregunta más sencilla.
+- Responde siempre en español.
+
+🗣️ Tono:
+Mantén un tono amable, respetuoso y firme, mostrando desacuerdo cuando sea necesario, pero siempre desde el razonamiento ético y la intención educativa.`;
+const DEF_EVAL=`Actúa como una docente universitaria experta en educación y desarrollo moral. Lee el debate y escribe una valoración breve para {nombre}: máximo 90 palabras, cuatro frases cortas, sin listas largas:
+1) Su mejor argumento.
+2) Desde qué perspectiva ha razonado sobre todo (Kohlberg, Piaget o Gilligan), en una frase y sin juzgar.
+3) Uso de autores: ha citado {autores}; el mínimo era {minAutores}. Di si lo cumple y si los ha usado bien.
+4) Una pregunta para seguir pensando.
+Tono cercano y constructivo.`;
+const DEF_AUTORES="Piaget, Kohlberg, Gilligan, Noddings, Dewey, Freire, Vygotsky, Kant, Rawls, Habermas, Aristóteles, Platón, Sócrates, Rousseau, Montessori, Bandura, Durkheim, Bronfenbrenner, Turiel, Rest, Hoffman, Haidt, Nussbaum, Cortina, Puig, Camps, Savater, Morin, Delors, Bauman, Arendt, Levinas, Mill, Bentham, Goleman, Gardner, Maslow, Rogers, Bruner, Meirieu, Marina";
+const ROLES={socratico:"guía socrático: haz preguntas que obliguen a justificar, sin imponer tu opinión",abogado:"abogado del diablo: defiende con firmeza la postura contraria a la del alumno",neutral:"moderador neutral: presenta argumentos de ambos lados y pide al alumno que los pese"};
+const DEF_DILEMAS=[
+ {tag:"Evaluación",titulo:"¿Eliminar los deberes?",texto:"Un centro se plantea suprimir los deberes en casa para reducir desigualdades entre familias. Otros docentes creen que sin práctica autónoma el aprendizaje se resiente."},
+ {tag:"Tecnología",titulo:"Móviles en el aula",texto:"¿Debe prohibirse el móvil en clase o aprovecharlo como herramienta de aprendizaje con normas claras?"},
+ {tag:"Inclusión",titulo:"Grupos por nivel",texto:"Agrupar al alumnado por rendimiento puede facilitar la enseñanza, pero también puede etiquetar y reducir expectativas. ¿Agrupar o mezclar?"},
+ {tag:"IA y ética",titulo:"IA en los trabajos de clase",texto:"Un alumno entrega un trabajo hecho en parte con IA y lo declara. ¿Se debe aceptar, penalizar o rediseñar la tarea?"},
+ {tag:"Convivencia",titulo:"Sanción o mediación",texto:"Ante un conflicto grave entre dos alumnos, ¿es mejor aplicar la sanción del reglamento o abrir un proceso de mediación?"},
+ {tag:"Evaluación",titulo:"Repetir curso",texto:"Un alumno no alcanza los objetivos. ¿Repetir curso le ayuda o es mejor promocionar con apoyos?"}
+];
+const $=s=>document.querySelector(s);
+const LS={get(k,d){try{const v=localStorage.getItem("agora_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("agora_"+k,JSON.stringify(v))}catch(e){}}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const CFG_DEF=()=>({rol:"socratico",nivel:"Grado universitario (Educación)",maxTurnos:6,minAutores:3,autores:DEF_AUTORES,prompt:DEF_PROMPT,promptEval:DEF_EVAL});
+let cfg=LS.get("cfg4",null)||CFG_DEF();
+const C=window.AGORA_CONFIG||{};
+let dilemas=LS.get("dilemas",null)||(Array.isArray(C.dilemas)&&C.dilemas.length?C.dilemas:DEF_DILEMAS).slice();
+let actual=null,postura="Aún no lo sé",historial=[],turno=0,ocupado=false,sample=null,downloads=null,terminado=false,avisoAutores=false,valoracion="";
+const norm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function autoresCitados(){const txt=norm(historial.filter(m=>m.role==="user").map(m=>m.content).join(" "));
+ return cfg.autores.split(",").map(a=>a.trim()).filter(Boolean).filter(a=>new RegExp("\\b"+norm(a).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b").test(txt))}
+function pintarAutores(){const a=autoresCitados();$("#autoresPill").textContent="Autores citados "+a.length+"/"+cfg.minAutores+(a.length?": "+a.join(", "):"");
+ $("#autoresPill").style.color=a.length>=cfg.minAutores?"var(--field)":"";return a}
+
+/* --- navegación --- */
+function ver(id){for(const v of ["vElegir","vDebate","vDocente"])$("#"+v).classList.toggle("hidden",v!==id);
+ $("#tabAlumno").setAttribute("aria-pressed",id!=="vDocente");$("#tabDocente").setAttribute("aria-pressed",id==="vDocente");window.scrollTo(0,0)}
+$("#tabAlumno").onclick=()=>ver(actual?"vDebate":"vElegir");
+$("#tabDocente").onclick=()=>{pintarDocente();ver("vDocente")};
+
+/* --- elegir dilema --- */
+$("#nombre").value=LS.get("nombre","");
+$("#nombre").oninput=e=>LS.set("nombre",e.target.value);
+function pintarGrid(){
+ $("#grid").innerHTML=dilemas.map((d,i)=>`<button class="dcard" data-i="${i}"><span class="tag">${esc(d.tag)}</span><h3>${esc(d.titulo)}</h3><p>${esc(d.texto)}</p></button>`).join("")||'<p class="hint">No hay dilemas todavía. Añádelos en la pestaña Docente.</p>';
+}
+$("#grid").onclick=e=>{const b=e.target.closest(".dcard");if(b)empezar(+b.dataset.i)};
+
+/* --- debate --- */
+const nombre=()=>($("#nombre").value.trim()||"el alumno");
+function rellenar(t){const d=actual||{};return t.replaceAll("{dilema}",d.titulo||"").replaceAll("{descripcion}",d.texto||"").replaceAll("{postura}",postura).replaceAll("{rol}",ROLES[cfg.rol]).replaceAll("{nivel}",cfg.nivel).replaceAll("{nombre}",nombre()).replaceAll("{turno}",turno).replaceAll("{maxTurnos}",cfg.maxTurnos).replaceAll("{minAutores}",cfg.minAutores).replaceAll("{autores}",autoresCitados().join(", ")||"ninguno todavía")}
+function empezar(i){
+ actual=dilemas[i];historial=[];turno=0;postura="Aún no lo sé";terminado=false;avisoAutores=false;valoracion="";
+ $("#dTag").textContent=actual.tag;$("#dTitulo").textContent=actual.titulo;$("#dTexto").textContent=actual.texto;
+ marcarPostura();$("#chat").innerHTML="";$("#resumen").innerHTML="";$("#turnos").textContent="Turno 0 de "+cfg.maxTurnos;
+ $("#composer").classList.remove("hidden");$("#cierre").classList.add("hidden");$("#btnResumen").classList.remove("hidden");$("#pdfEstado").textContent="";pintarAutores();
+ burbuja("sys","Elige tu postura y escribe tu primer argumento. Tienes "+cfg.maxTurnos+" turnos y debes apoyarte en al menos "+cfg.minAutores+" autores.");
+ ver("vDebate");$("#txt").focus();
+}
+function marcarPostura(){for(const b of document.querySelectorAll(".stance button"))b.setAttribute("aria-pressed",b.dataset.p===postura)}
+document.querySelector(".stance").onclick=e=>{const b=e.target.closest("button");if(!b)return;postura=b.dataset.p;marcarPostura();
+ if(historial.length)burbuja("sys","Has cambiado tu postura a: "+postura)};
+$("#btnVolver").onclick=()=>{actual=null;ver("vElegir")};
+function burbuja(tipo,texto){const d=document.createElement("div");d.className="msg "+tipo;
+ if(tipo==="sys")d.textContent=texto;else{d.innerHTML=`<span class="who">${tipo==="me"?esc(nombre()==="el alumno"?"Tú":nombre()):"IA"}</span><span class="t"></span>`;d.querySelector(".t").textContent=texto}
+ $("#chat").appendChild(d);d.scrollIntoView({block:"nearest",behavior:"smooth"});return d}
+function bloquear(v){ocupado=v;$("#btnEnviar").disabled=v;$("#btnResumen").disabled=v}
+
+$("#composer").onsubmit=async e=>{
+ e.preventDefault();const t=$("#txt").value.trim();if(!t||ocupado)return;
+ $("#txt").value="";burbuja("me",t);historial.push({role:"user",content:t});turno++;pintarAutores();
+ $("#turnos").textContent="Turno "+turno+" de "+cfg.maxTurnos;
+ bloquear(true);const b=burbuja("ai","");const tt=b.querySelector(".t");tt.textContent="Pensando…";
+ let ok=true;
+ try{const r=await preguntarIA(rellenar(cfg.prompt),historial,txt=>tt.textContent=txt);tt.textContent=r;historial.push({role:"assistant",content:r})}
+ catch(err){ok=false;tt.textContent="No he podido responder ahora. Inténtalo de nuevo en un momento.";historial.pop();turno--;$("#turnos").textContent="Turno "+turno+" de "+cfg.maxTurnos}
+ bloquear(false);
+ if(ok&&turno>=cfg.maxTurnos)finalizar();else $("#txt").focus();
+};
+$("#txt").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#composer").requestSubmit()}};
+
+$("#btnResumen").onclick=()=>{
+ if(!historial.length){burbuja("sys","Escribe al menos un argumento antes de terminar.");return}
+ const faltan=cfg.minAutores-autoresCitados().length;
+ if(faltan>0&&!avisoAutores){avisoAutores=true;burbuja("sys","Aún te faltan "+faltan+" autor(es) para llegar al mínimo de "+cfg.minAutores+". Si quieres terminar igualmente, vuelve a pulsar «Terminar».");return}
+ finalizar();
+};
+const conversacion=()=>historial.map(m=>(m.role==="user"?"ALUMNO: ":"IA: ")+m.content).join("\n\n");
+async function finalizar(){
+ if(terminado)return;terminado=true;
+ $("#composer").classList.add("hidden");$("#btnResumen").classList.add("hidden");
+ burbuja("sys","Debate terminado.");
+ bloquear(true);$("#resumen").innerHTML='<div class="summary"><strong>Valoración</strong>\n<span class="t">Preparando…</span></div>';
+ const tt=$("#resumen .t");
+ try{valoracion=await preguntarIA(rellenar(cfg.promptEval),[{role:"user",content:"Dilema: "+actual.titulo+"\nPostura final: "+postura+"\n\nDebate:\n"+conversacion()}],x=>tt.textContent=x);tt.textContent=valoracion}
+ catch(e){tt.textContent="No se pudo generar la valoración.";valoracion=""}
+ bloquear(false);$("#cierre").classList.remove("hidden");
+ $("#resumen").scrollIntoView({behavior:"smooth"});
+}
+
+/* --- PDF --- */
+const latin=s=>String(s).replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF\u2013\u2014\u2018\u2019\u201C\u201D\u2026\u20AC]/g,"");
+function crearPdf(){
+ const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:"mm",format:"a4"});
+ const M=18,W=210-2*M,H=297;let y=M;
+ const salto=h=>{if(y+h>H-M){doc.addPage();y=M}};
+ const texto=(t,{size=11,bold=false,color=[22,24,29],gap=2}={})=>{doc.setFont("helvetica",bold?"bold":"normal");doc.setFontSize(size);doc.setTextColor(...color);
+  for(const l of doc.splitTextToSize(latin(t),W)){salto(size*0.45);doc.text(l,M,y);y+=size*0.45}y+=gap};
+ doc.setFillColor(15,92,99);doc.rect(0,0,210,28,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(18);doc.text("Ágora · Debate de dilema educativo",M,17);y=38;
+ const a=autoresCitados();
+ texto("Alumno/a: "+nombre()+"     Fecha: "+new Date().toLocaleDateString("es-ES"),{size:10,color:[91,102,112]});
+ texto(actual.titulo,{size:15,bold:true,gap:1});texto(actual.texto,{size:10,color:[91,102,112]});
+ texto("Postura final: "+postura+"     Turnos: "+turno+" de "+cfg.maxTurnos,{size:10});
+ texto("Autores citados ("+a.length+"/"+cfg.minAutores+"): "+(a.join(", ")||"ninguno"),{size:10,gap:5});
+ texto("Conversación",{size:13,bold:true});
+ for(const m of historial){texto(m.role==="user"?nombre():"IA",{size:9,bold:true,color:m.role==="user"?[15,92,99]:[232,69,60],gap:0.5});texto(m.content,{size:10.5,gap:4})}
+ if(valoracion){y+=2;texto("Valoración final",{size:13,bold:true});texto(valoracion,{size:10.5})}
+ return doc.output("blob");
+}
+$("#btnPdf").onclick=async()=>{
+ const est=$("#pdfEstado");
+ if(!window.jspdf){est.textContent="No se ha podido cargar el generador de PDF. Usa «Copiar conversación».";return}
+ try{const nom=("debate-"+actual.titulo+"-"+nombre()).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\w-]+/g,"-").toLowerCase()+".pdf";
+  if(downloads)await downloads.save({filename:nom,data:crearPdf()});
+  else{const u=URL.createObjectURL(crearPdf());const a=document.createElement("a");a.href=u;a.download=nom;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+  est.textContent="PDF descargado."}
+ catch(e){est.textContent=e&&e.code==="declined"?"Descarga cancelada.":"No se pudo descargar el PDF."}
+};
+$("#btnCopiar").onclick=async()=>{
+ const t="Debate: "+actual.titulo+"\nAlumno/a: "+nombre()+"\nPostura final: "+postura+"\nAutores citados: "+(autoresCitados().join(", ")||"ninguno")+"\n\n"+conversacion()+(valoracion?"\n\nVALORACIÓN:\n"+valoracion:"");
+ try{await navigator.clipboard.writeText(t);$("#pdfEstado").textContent="Conversación copiada."}catch(e){$("#pdfEstado").textContent="No se pudo copiar."}
+};
+
+/* --- motor de IA: único punto a cambiar para usar ChatGPT --- */
+async function preguntarIA(system,mensajes,onText){
+ if(C.apiUrl){
+  const r=await fetch(C.apiUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system,mensajes})});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const j=await r.json();if(!j.texto)throw new Error("sin texto");return j.texto;
+ }
+ if(sample){
+  const msgs=mensajes.map((m,i)=>i===0&&m.role==="user"?{role:"user",content:"INSTRUCCIONES DEL SISTEMA:\n"+system+"\n\n---\n"+m.content}:m);
+  if(msgs[0].role!=="user")msgs.unshift({role:"user",content:"INSTRUCCIONES DEL SISTEMA:\n"+system});
+  const r=await sample(msgs,{cache:false,modelTier:"default",onText:({text})=>onText(text)});return r.text;
+ }
+ await new Promise(r=>setTimeout(r,700));
+ const demo=["Interesante. ¿Qué pruebas o experiencias concretas apoyan lo que dices?","Imagina a alguien que piensa justo lo contrario: ¿cuál sería su mejor argumento?","¿Cambiaría tu respuesta si el alumnado fuera de un contexto social muy distinto?","¿Qué consecuencias a largo plazo tendría aplicar tu propuesta en todo el centro?"];
+ return "(Modo demostración) "+demo[(turno-1)%demo.length];
+}
+
+/* --- docente --- */
+function pintarDocente(){
+ $("#nivel").value=cfg.nivel;$("#maxTurnos").value=cfg.maxTurnos;$("#minAutores").value=cfg.minAutores;$("#listaAutores").value=cfg.autores;$("#prompt").value=cfg.prompt;$("#promptEval").value=cfg.promptEval;
+ $("#dl").innerHTML=dilemas.map((d,i)=>`<div class="ditem" data-i="${i}"><input data-k="tag" value="${esc(d.tag)}" aria-label="Categoría"><input data-k="titulo" value="${esc(d.titulo)}" aria-label="Título"><textarea data-k="texto" rows="3" aria-label="Descripción">${esc(d.texto)}</textarea><div class="row"><button data-del="${i}">Eliminar</button></div></div>`).join("");
+ $("#motor").textContent=C.apiUrl?"Estado: conectado a ChatGPT a través de "+C.apiUrl:sample?"Estado: conectado a Claude (vista previa).":"Estado: modo demostración. Falta poner la dirección del servidor en config.js.";
+}
+$("#dl").oninput=e=>{const it=e.target.closest(".ditem");if(it&&e.target.dataset.k)dilemas[+it.dataset.i][e.target.dataset.k]=e.target.value};
+$("#dl").onclick=e=>{const i=e.target.dataset.del;if(i!==undefined){dilemas.splice(+i,1);pintarDocente()}};
+$("#btnAdd").onclick=()=>{dilemas.push({tag:"Nueva",titulo:"Nuevo dilema",texto:"Describe aquí la situación."});pintarDocente()};
+$("#btnGuardar").onclick=()=>{cfg={rol:cfg.rol,nivel:$("#nivel").value,maxTurnos:Math.max(2,+$("#maxTurnos").value||6),minAutores:Math.max(0,+$("#minAutores").value||0),autores:$("#listaAutores").value,prompt:$("#prompt").value,promptEval:$("#promptEval").value};
+ LS.set("cfg4",cfg);LS.set("dilemas",dilemas);pintarGrid();$("#guardado").textContent="Guardado";setTimeout(()=>$("#guardado").textContent="",2000)};
+$("#btnReset").onclick=()=>{cfg=CFG_DEF();dilemas=DEF_DILEMAS.slice();pintarDocente();$("#guardado").textContent="Valores por defecto cargados (pulsa Guardar)"};
+
+pintarGrid();
+if(window.claude&&claude.use)claude.use("downloads").then(d=>{downloads=d}).catch(()=>{});
+if(window.claude&&claude.use)claude.use("sample").then(s=>{sample=s;if(!$("#vDocente").classList.contains("hidden"))pintarDocente()}).catch(()=>{});
+}
+</script>
+</body>
+</html>
