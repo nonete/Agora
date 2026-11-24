@@ -248,7 +248,10 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const CFG_DEF=()=>({rol:"socratico",nivel:"Grado universitario (Educación)",maxTurnos:6,minAutores:3,autores:DEF_AUTORES,prompt:DEF_PROMPT,promptEval:DEF_EVAL});
 let cfg=LS.get("cfg4",null)||CFG_DEF();
 const C=window.AGORA_CONFIG||{};
-let dilemas=LS.get("dilemas",null)||(Array.isArray(C.dilemas)&&C.dilemas.length?C.dilemas:DEF_DILEMAS).slice();
+const BASE_DILEMAS=Array.isArray(C.dilemas)&&C.dilemas.length?C.dilemas:DEF_DILEMAS;
+let hs=0;for(const ch of JSON.stringify(BASE_DILEMAS))hs=(hs*31+ch.charCodeAt(0))|0;
+const KEY_DILEMAS="dilemas_"+(hs>>>0).toString(36);
+let dilemas=LS.get(KEY_DILEMAS,null)||BASE_DILEMAS.slice();
 let actual=null,postura="Aún no lo sé",historial=[],turno=0,ocupado=false,sample=null,downloads=null,terminado=false,avisoAutores=false,valoracion="";
 const norm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 function autoresCitados(){const txt=norm(historial.filter(m=>m.role==="user").map(m=>m.content).join(" "));
@@ -382,8 +385,8 @@ $("#dl").oninput=e=>{const it=e.target.closest(".ditem");if(it&&e.target.dataset
 $("#dl").onclick=e=>{const i=e.target.dataset.del;if(i!==undefined){dilemas.splice(+i,1);pintarDocente()}};
 $("#btnAdd").onclick=()=>{dilemas.push({tag:"Nueva",titulo:"Nuevo dilema",texto:"Describe aquí la situación."});pintarDocente()};
 $("#btnGuardar").onclick=()=>{cfg={rol:cfg.rol,nivel:$("#nivel").value,maxTurnos:Math.max(2,+$("#maxTurnos").value||6),minAutores:Math.max(0,+$("#minAutores").value||0),autores:$("#listaAutores").value,prompt:$("#prompt").value,promptEval:$("#promptEval").value};
- LS.set("cfg4",cfg);LS.set("dilemas",dilemas);pintarGrid();$("#guardado").textContent="Guardado";setTimeout(()=>$("#guardado").textContent="",2000)};
-$("#btnReset").onclick=()=>{cfg=CFG_DEF();dilemas=DEF_DILEMAS.slice();pintarDocente();$("#guardado").textContent="Valores por defecto cargados (pulsa Guardar)"};
+ LS.set("cfg4",cfg);LS.set(KEY_DILEMAS,dilemas);pintarGrid();$("#guardado").textContent="Guardado";setTimeout(()=>$("#guardado").textContent="",2000)};
+$("#btnReset").onclick=()=>{cfg=CFG_DEF();dilemas=BASE_DILEMAS.slice();pintarDocente();$("#guardado").textContent="Valores por defecto cargados (pulsa Guardar)"};
 
 pintarGrid();
 if(window.claude&&claude.use)claude.use("downloads").then(d=>{downloads=d}).catch(()=>{});
